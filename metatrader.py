@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import pytz
 import talib as ta
 import config
+import constants
 
 conf = config.load_config()
 
@@ -20,11 +21,15 @@ def connect(account):
               .format(account, mt5.last_error()))
 
 
-def check_trades(time_frame, pair_data):
+def check_trades(time_frame, pair_data, strategy):
     print("Checking trades...")
+    moving_averages = strategy['movingAverages']
     for pair, data in pair_data.items():
-        data['SMA'] = ta.SMA(data['close'], 10)
-        data['EMA'] = ta.EMA(data['close'], 50)
+        for m in moving_averages :
+            ma_func = constants.moving_average_functions[m]
+            val = moving_averages [m]['val']
+            data[m] = ma_func(data['close'], val)
+
         last_row = data.tail(1)
         open_positions = positions_get()
         current_dt = datetime.now().astimezone(pytz.timezone(conf.get('timezone')))
@@ -43,7 +48,7 @@ def check_trades(time_frame, pair_data):
 
             # Entry strategy
             if (last['close'] > last['EMA'] and last['close'] < last['SMA']):
-                open_position(pair, "BUY", 1, 300, 100)
+                open_position(pair, "BUY", 1, float(strategy['takeProfit']), float(strategy['stopLoss']))
     print("Finished checking trades.")
 
 
@@ -56,8 +61,8 @@ def close_positon_by_symbol(symbol):
         open_positions['ticket'].apply(lambda x: close_position(x))
 
 
-def get_data(time_frame):
-    pairs = ['EURUSD', 'USDCAD']
+def get_data(time_frame, strategy):
+    pairs = strategy['pairs']
     pair_data = dict()
     for pair in pairs:
         utc_from = datetime(2021, 1, 1, tzinfo=pytz.timezone(conf.get('timezone')))

@@ -1,0 +1,20 @@
+{
+  "strategy_name": "testStrategy",
+  "pairs": [
+    "EURUSD",
+    "USDCAD",
+    "GBPUSD"
+  ],
+  "takeProfit": 700.0,
+  "stopLoss": 300.0,
+  "movingAverages": {
+    "SMA": {
+      "val": 10,
+      "aboveBelow": "below"
+    },
+    "EMA": {
+      "val": 50,
+      "aboveBelow": "above"
+    }
+  }
+}
