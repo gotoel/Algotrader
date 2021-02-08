@@ -13,4 +13,4 @@ Project is based on this Reddit post: https://www.reddit.com/r/Python/comments/l
 
 Run: `pip install schedule pytz MetaTrader5 pandas`
 
-Install TA-Lib: https://mrjbq7.github.io/ta-lib/install.html
+Install TA-Lib: https://mrjbq7.github.io/ta-lib/install.html -- Note: For Windows: https://github.com/mrjbq7/ta-lib#windows
