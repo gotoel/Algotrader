@@ -10,3 +10,5 @@ Project is based on this Reddit post: https://www.reddit.com/r/Python/comments/l
 ### Prerequisites:
 
 ### Installing:
+
+Run: `pip install schedule pytz MetaTrader5 pandas`
