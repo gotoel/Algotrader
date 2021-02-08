@@ -44,6 +44,7 @@ def check_trades(time_frame, pair_data):
             # Entry strategy
             if (last['close'] > last['EMA'] and last['close'] < last['SMA']):
                 open_position(pair, "BUY", 1, 300, 100)
+    print("Finished checking trades.")
 
 
 def close_positon_by_symbol(symbol):
@@ -56,8 +57,8 @@ def get_data(time_frame):
     pairs = ['EURUSD', 'USDCAD']
     pair_data = dict()
     for pair in pairs:
-        utc_from = datetime(2021, 1, 1, tzinfo=pytz.timezone('Europe/Athens'))
-        date_to = datetime.now().astimezone(pytz.timezone('Europe/Athens'))
+        utc_from = datetime(2021, 1, 1, tzinfo=pytz.timezone(conf.get('timezone')))
+        date_to = datetime.now().astimezone(pytz.timezone(conf.get('timezone')))
         date_to = datetime(date_to.year, date_to.month, date_to.day, hour=date_to.hour, minute=date_to.minute)
         rates = mt5.copy_rates_range(pair, time_frame, utc_from, date_to)
         rates_frame = pd.DataFrame(rates)
