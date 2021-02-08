@@ -1,5 +1,8 @@
 import MetaTrader5 as mt5
 import pandas as pd
+from datetime import datetime, timedelta
+import pytz
+import talib as ta
 
 def connect(account):
     account = int(account)
@@ -11,6 +14,32 @@ def connect(account):
     else:
         print("Failed to connect at account #{}, error code: {}"
               .format(account, mt5.last_error()))
+
+
+def check_trades(time_frame, pair_data):
+    for pair, data in pair_data.items():
+        data['SMA'] = ta.SMA(data['close'], 10)
+        data['EMA'] = ta.EMA(data['close'], 50)
+        last_row = data.tail(1)
+
+        for index, last in last_row.iterrows():
+            if(last['close'] > last['EMA'] and last['close'] < last['SMA']):
+                open_position(pair, "BUY", 1, 300, 100)
+
+
+def get_data(time_frame):
+    pairs = ['EURUSD', 'USDCAD']
+    pair_data = dict()
+    for pair in pairs:
+        utc_from = datetime(2021, 1, 1, tzinfo=pytz.timezone('Europe/Athens'))
+        date_to = datetime.now().astimezone(pytz.timezone('Europe/Athens'))
+        date_to = datetime(date_to.year, date_to.month, date_to.day, hour=date_to.hour, minute=date_to.minute)
+        rates = mt5.copy_rates_range(pair, time_frame, utc_from, date_to)
+        rates_frame = pd.DataFrame(rates)
+        rates_frame['time'] = pd.to_datetime(rates_frame['time'], unit='s')
+        rates_frame.drop(rates_frame.tail(1).index, inplace = True)
+        pair_data[pair] = rates_frame
+    return pair_data
 
 
 def open_position(pair, order_type, size, tp_distance=None, stop_distance=None):
