@@ -1,4 +1,4 @@
-# StockBoat
+# Algotrader
 
 ### About the Project:
 Algorithmic trading bot using Python, MT5, Ta-lib, Pandas, Plotly, (dash/flask? this can be whatever + some database )
