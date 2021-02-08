@@ -3,7 +3,7 @@ import sys
 from os import path
 
 conf_template = {
-    "metaquotes_id" : "[metaquites_id]",
+    "metaquotes_id" : "[metaquotes_id]",
 }
 
 settings_filename = "settings.json"
