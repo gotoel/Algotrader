@@ -4,6 +4,7 @@ from os import path
 
 conf_template = {
     "metaquotes_id" : "[metaquotes_id]",
+    "timezone": "America/New_York"
 }
 
 settings_filename = "settings.json"

@@ -26,5 +26,7 @@ def run_trader(time_frame):
 
 
 run_trader(mt5.TIMEFRAME_M15)
-#live_trading()
 
+#metatrader.close_all_positions()
+
+#live_trading()
