@@ -49,6 +49,9 @@ def check_trades(time_frame, pair_data):
 
 def close_positon_by_symbol(symbol):
     open_positions = positions_get(symbol)
+
+    # Had to add this check here...
+    # open positions was null above and we were getting a key error with `ticket`
     if 'ticket' in open_positions:
         open_positions['ticket'].apply(lambda x: close_position(x))
 

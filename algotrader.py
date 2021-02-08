@@ -29,4 +29,4 @@ run_trader(mt5.TIMEFRAME_M15)
 
 #metatrader.close_all_positions()
 
-#live_trading()
+live_trading()
