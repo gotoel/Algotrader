@@ -1,10 +1,12 @@
 {
   "strategy_name": "testStrategy",
+  "account_currency" : "USD",
   "pairs": [
     "EURUSD",
     "USDCAD",
     "GBPUSD"
   ],
+  "risk" : 2,
   "takeProfit": 700.0,
   "stopLoss": 300.0,
   "movingAverages": {

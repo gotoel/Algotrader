@@ -48,7 +48,8 @@ def check_trades(time_frame, pair_data, strategy):
 
             # Entry strategy
             if (last['close'] > last['EMA'] and last['close'] < last['SMA']):
-                open_position(pair, "BUY", 1, float(strategy['takeProfit']), float(strategy['stopLoss']))
+                lot_size = calc_position_size(pair, strategy)
+                open_position(pair, "BUY", lot_size, float(strategy['takeProfit']), float(strategy['stopLoss']))
     print("Finished checking trades.")
 
 
@@ -76,6 +77,16 @@ def get_data(time_frame, strategy):
     return pair_data
 
 
+def calc_position_size(symbol, strategy):
+    print("Calculating position size for: ", symbol)
+    account = mt5.account_info()
+    balance = float(account.balance)
+    pip_value = constants.get_pip_value(symbol, strategy['account_currency'])
+    lot_size = (float(balance) * (float(strategy["risk"])/100)) / (pip_value * strategy["stopLoss"])
+    lot_size = round(lot_size, 2)  # MT5 only accepts lot sizes rounded to 2 decimal places, other brokers can do more.
+    return lot_size
+
+
 def open_position(pair, order_type, size, tp_distance=None, stop_distance=None):
     symbol_info = mt5.symbol_info(pair)
     if symbol_info is None:
@@ -85,7 +96,7 @@ def open_position(pair, order_type, size, tp_distance=None, stop_distance=None):
     if not symbol_info.visible:
         print(pair, "is not visible, trying to switch on")
         if not mt5.symbol_select(pair, True):
-            print("symbol_select({}}) failed, exit", pair)
+            print("symbol_select({}) failed, exit", pair)
             return
     print(pair, "found!")
 
