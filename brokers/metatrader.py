@@ -2,7 +2,7 @@ import MetaTrader5 as mt5
 import pandas as pd
 from datetime import datetime, timedelta
 import pytz
-import talib as ta
+import ta
 import config
 import constants
 
