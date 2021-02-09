@@ -1,6 +1,9 @@
 {
   "strategy_name": "testStrategy",
-  "account_currency" : "USD",
+  "brokers": [
+    "metatrader"
+  ],
+  "account_currency": "USD",
   "pairs": [
     "EURUSD",
     "USDCAD",
