@@ -18,5 +18,4 @@ def load_config():
     else:
         with open(settings_filename, "r") as jsonfile:
             conf = json.load(jsonfile)
-            print("Read config file.")
             return conf
