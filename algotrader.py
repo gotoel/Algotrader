@@ -20,6 +20,7 @@ def live_trading(strategy):
         schedule.run_pending()
         time.sleep(1)
 
+
 def run_trader(strategy):
     print("Running trader at", datetime.now())
 
@@ -27,6 +28,7 @@ def run_trader(strategy):
         print("[run_trader]: No brokers defined in strategy (%s)", strategy["name"])
         return
 
+    # Only run strategy against supported brokers.
     for broker in strategy["brokers"]:
         if broker == "metatrader":
             from brokers import metatrader
@@ -42,6 +44,8 @@ def run_trader(strategy):
             print("[run_trader]: Error: Broker not implemented: %s" % broker)
 
 
+# MAIN PROGRAM ENTRY
+# Example run: python algotrader.py [strategy, located in ./strategies/]
 if __name__ == '__main__':
     # ALPACA TESTING BEGIN.
     from brokers import alpaca
@@ -53,7 +57,7 @@ if __name__ == '__main__':
     # ALPACA TESTING END.
 
     current_strategy = sys.argv[1]
-    print("Trading bot started with strategy: ", current_strategy)
+    print("[Main] Trading bot started with strategy: ", current_strategy)
     current_strategy = strategy.load_strategy(current_strategy)
     live_trading(current_strategy)
 

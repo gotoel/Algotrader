@@ -8,8 +8,8 @@ moving_average_functions = {
     'linearReg' : lambda close, timeP: ta.linreg(close, timeP),
     'TRIMA' : lambda close, timeP: ta.trima(close, timeP),
     'DEMA' : lambda close, timeP: ta.dema(close, timeP),
-    'HT_TRENDLINE' : lambda close, timeP: ta.HT_TRENDLINE(close, timeP),
-    'TSF' : lambda close, timeP: ta.TSF(close, timeP)
+    # 'HT_TRENDLINE' : lambda close, timeP: ta.HT_TRENDLINE(close, timeP), # Can't find pandas-ta equivalent
+    # 'TSF' : lambda close, timeP: ta.TSF(close, timeP)
 }
 
 
