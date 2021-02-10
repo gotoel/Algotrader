@@ -11,7 +11,7 @@ Project is based on this Reddit post: https://www.reddit.com/r/Python/comments/l
 
 ### Installing:
 
-Run: `pip install schedule pytz MetaTrader5 pandas forex-python pandas-ta`
+Run: `pip install schedule pytz MetaTrader5 pandas forex-python pandas-ta discord`
 
 
 The below TA-Lib install is deprecated for now in favor of pandas-ta 
