@@ -1,0 +1,22 @@
+{
+  "strategy_name": "alpacaStrategy",
+  "brokers": [
+    "alpaca"
+  ],
+  "symbols": [
+    "AMD"
+  ],
+  "risk" : 2,
+  "takeProfit": 3,
+  "stopLoss": 5.0,
+  "movingAverages": {
+    "SMA": {
+      "val": 10,
+      "aboveBelow": "below"
+    },
+    "EMA": {
+      "val": 50,
+      "aboveBelow": "above"
+    }
+  }
+}

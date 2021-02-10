@@ -47,11 +47,28 @@ def run_trader(strategy):
 # MAIN PROGRAM ENTRY
 # Example run: python algotrader.py [strategy, located in ./strategies/]
 if __name__ == '__main__':
+    # METATRADER TESTING BEGIN.
+    '''
+    current_strategy = sys.argv[1]
+    print("[Main] Trading bot started with strategy: ", current_strategy)
+    current_strategy = strategy.load_strategy(current_strategy)
+    from brokers import metatrader
+    metatrader.connect(conf.get('metaquotes_id'))
+    pair_data = metatrader.get_data(mt5.TIMEFRAME_M15, current_strategy)
+    metatrader.check_trades(mt5.TIMEFRAME_M15, pair_data, current_strategy)
+    '''
+    # METATRADER TESTING END.
+
+
     # ALPACA TESTING BEGIN.
     from brokers import alpaca
     alpaca = alpaca.Alpaca()
     if alpaca.connect():
-        alpaca.open_position("AMD", "BUY", 1, 10, 10)
+        alpaca_strategy = strategy.load_strategy('alpacaStrategy')
+        alpaca.check_trades(alpaca_strategy)
+        alpaca.graph_test("AMD")
+        #historic_trades = alpaca.get_data(alpaca_strategy)
+        #print(historic_trades)
         pass
     sys.exit(1)
     # ALPACA TESTING END.

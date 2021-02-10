@@ -1,6 +1,7 @@
 import pandas_ta as ta
 from forex_python.converter import CurrencyRates
 
+
 moving_average_functions = {
     'SMA' : lambda close, timeP: ta.sma(close, timeP),
     'EMA' : lambda close, timeP: ta.ema(close, timeP),
