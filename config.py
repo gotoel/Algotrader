@@ -6,7 +6,15 @@ conf_template = {
     "metaquotes_id" : "",
     "timezone": "America/New_York",
     "alpaca_keyid": "",
-    "alpaca_secret": ""
+    "alpaca_secret": "",
+
+    "reporting": {
+        "discord": {
+            "enabled": False,
+            "token": "",
+            "channel_id": ""
+        }
+    }
 }
 
 settings_filename = "settings.json"

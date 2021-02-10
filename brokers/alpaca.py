@@ -12,6 +12,7 @@ import math
 class Alpaca(object):
     api = None
     config = config.load_config()
+    discord_client = None
 
     def connect(self):
         keyid = self.config.get("alpaca_keyid")
@@ -31,16 +32,17 @@ class Alpaca(object):
         return False
 
     def check_trades(self, strategy):
-        print("[check_trades] Checking trades...")
+        self.report("[check_trades] Checking trades...")
         moving_averages = strategy['movingAverages']
 
         for symbol in strategy['symbols']:
+            asset = self.api.get_asset(symbol)
+
             barset_timeframe = "15Min"
             barset_data = self.api.get_barset(symbol, barset_timeframe, start=datetime.now())
             close = barset_data.df[(symbol, 'close')]
 
             last_trade = self.api.get_last_trade(symbol)
-
             # Calculate moving averages, SMA and EMA
             for m in moving_averages:
                 ma_func = constants.moving_average_functions[m]
@@ -52,23 +54,49 @@ class Alpaca(object):
             ema = barset_data['EMA'].values[-1]
 
             # Check positions
-            #open_positions = self.api.get_position(symbol)
-            #for position in open_positions:
+            open_positions = self.get_positions(symbol)
 
-            # Exit strategy: Is last close price lower than EMA and higher than SMA?
-            if ema > last_trade.price > sma:
-                self.api.close_position(symbol)
+            # Check if there are no open positions for this stock
+            if open_positions is None:
+                # Entry strategy: Is last close price higher than EMA and lower than SMA
+                if ema < last_trade.price < sma:
+                    lot_size = self.calc_position_size(symbol, strategy)
+                    self.open_position(symbol, "BUY", lot_size, float(strategy['takeProfit']),
+                                                                float(strategy['stopLoss']))
+            else:
+                # Exit strategy: Is last close price lower than EMA and higher than SMA?
+                if ema > last_trade.price > sma:
+                    self.close_position(symbol)
 
-            # Entry strategy: Is last close price higher than EMA and lower than SMA
-            if ema < last_trade.price < sma:
-                lot_size = self.calc_position_size(symbol, strategy)
-                self.open_position(symbol, "BUY", lot_size, float(strategy['takeProfit']), float(strategy['stopLoss']))
+    def close_position(self, symbol):
+        self.report("[close_position]: Closing position on (%s)." % symbol)
+        asset = self.api.get_asset(symbol)
+        orders = self.api.list_orders()
+
+        # Close out all incomplete orders
+        for order in orders:
+            if order.asset_id == asset.id:
+                self.api.cancel_order(order.id)
+
+        try:
+            self.close_position(symbol)
+        except Exception as err:
+            self.report("[close_position]: Unable to close position on (%s). Debug: %s" % (symbol, err))
+
+    def get_positions(self, symbol=None):
+        try:
+            if symbol is None:
+                return self.api.list_positions()
+            else:
+                return self.api.get_position(symbol)
+        except:
+            return None
 
     def get_historic_trades(self):
         return self.api.polygon.historic_trades_v2()
 
     def calc_position_size(self, symbol, strategy):
-        print("[calc_position_size]: Calculating position size for (%s)" % symbol)
+        self.report("[calc_position_size]: Calculating position size for (%s)" % symbol)
         account = self.api.get_account()
         balance = account.cash
         lot_size = float(balance) * float(strategy["risk"]/100) / strategy["stopLoss"]
@@ -77,16 +105,16 @@ class Alpaca(object):
 
 
     def open_position(self, symbol, order_type, size, tp_distance=None, stop_distance=None):
-        print("[open_position]: Opening position on (%s)." % symbol)
+        self.report("[open_position]: Opening position on (%s)." % symbol)
         try:
             symbol_info = self.api.get_asset(symbol)
         except Exception as err:
-            print("[open_position]: Error: Unable to get symbol information for (%s). Debug: %s" % (symbol, err))
+            self.report("[open_position]: Error: Unable to get symbol information for (%s). Debug: %s" % (symbol, err))
             return False
 
         # Check if symbol is not valid/tradable.
         if not symbol_info.status == 'active':
-            print("[open_position]: Error: symbol (%s) is not active. Debug: %s" % (symbol, symbol_info))
+            self.report("[open_position]: Error: symbol (%s) is not active. Debug: %s" % (symbol, symbol_info))
             return False
 
         symbol_quote = self.api.get_last_quote(symbol)
@@ -106,7 +134,7 @@ class Alpaca(object):
             if tp_distance:
                 tp = price - tp_distance
         else:
-            print("[open_position]: Error: Order type undefined: (%s)" % order_type)
+            self.report("[open_position]: Error: Order type undefined: (%s)" % order_type)
             return False
 
         try:
@@ -125,15 +153,18 @@ class Alpaca(object):
                     limit_price=sl,
                 )
             )
-            print("[open_position]: Successfully opened (%s) position on (%s)" % (order_type, symbol))
+            self.report("[open_position]: Successfully opened (%s) position on (%s)" % (order_type, symbol))
             return True
         except Exception as err:
-            print("[open_position]: Error: Failed to open position for (%s). Debug: %s" % (symbol, err))
+            self.report("[open_position]: Error: Failed to open position for (%s). Debug: %s" % (symbol, err))
             return False
 
     def graph_test(self, symbol):
+        self.report("[graph_test] Plotting data...")
+
         barset_timeframe = "15Min"  # 1Min, 5Min, 15Min, 1H, 1D
         returned_data = self.api.get_barset(symbol, barset_timeframe, start=datetime.now())
+        closeData = returned_data.df[(symbol, "close")]
 
         # Pull Time values... need to find a better/quicker way of doing it on the returned data.
         timeList = []
@@ -145,18 +176,19 @@ class Alpaca(object):
         #import plotly.graph_objects as go
         #fig = go.Figure(data=[go.Candlestick(x=timeList,
         #                                    open=openList, high=highList,
-        #                                     low=lowList, close=closeList)])
+        #                                      low=lowList, close=closeList)])
         #fig.show()
+        #fig.to_image()
 
-        sma20 = ta.sma(returned_data.df[(symbol, "close")], 20)
-        sma50 = ta.sma(returned_data.df[(symbol, "close")], 50)
+        sma20 = ta.sma(closeData, 20)
+        sma50 = ta.sma(closeData, 50)
 
         # Defines the plot for each trading symbol
         f, ax = plt.subplots()
         f.suptitle(symbol)
 
         # Plots market data and indicators
-        ax.plot(timeList, returned_data.df[(symbol, "close")],
+        ax.plot(timeList, closeData,
                 label=symbol, color="black")
         ax.plot(timeList, sma20, label="SMA20", color="green")
         ax.plot(timeList, sma50, label="SMA50", color="red")
@@ -170,4 +202,19 @@ class Alpaca(object):
         # Adds the legend to the right of the chart
         ax.legend(loc='best', bbox_to_anchor=(1.0, 0.5))
 
-        plt.show()
+        #plot = plt.show()
+        plt.savefig('temp.png')
+        if self.discord_client:
+            self.discord_client.msg_file('temp.png')
+        else:
+            plt.show()
+
+    def report(self, msg):
+        if self.discord_client:
+            self.discord_client.msg(msg)
+        print(msg)
+
+    def report_file(self, filename):
+        if self.discord_client:
+            self.discord_client.msg(filename)
+

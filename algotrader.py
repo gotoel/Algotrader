@@ -6,9 +6,12 @@ import sys
 import strategy
 from datetime import datetime
 
+from reporting import discord
+import threading
+
 
 conf = config.load_config()
-
+discord_bot = None
 
 def live_trading(strategy):
     schedule.every().hour.at(":00").do(run_trader, strategy)
@@ -47,6 +50,14 @@ def run_trader(strategy):
 # MAIN PROGRAM ENTRY
 # Example run: python algotrader.py [strategy, located in ./strategies/]
 if __name__ == '__main__':
+    # REPORTING SYSTEMS BEGIN.
+    discord_client = discord.DiscordBot(command_prefix=">", self_bot=False)
+    #discord_bot.run(conf['reporting']['discord']['token'])
+    discord_client.login(conf['reporting']['discord']['token'])
+    t = threading.Thread(target=discord_client.run, args=(conf['reporting']['discord']['token'],))
+    t.start()
+    # REPORTING SYSTEMS END.
+
     # METATRADER TESTING BEGIN.
     '''
     current_strategy = sys.argv[1]
@@ -59,18 +70,15 @@ if __name__ == '__main__':
     '''
     # METATRADER TESTING END.
 
-
     # ALPACA TESTING BEGIN.
     from brokers import alpaca
     alpaca = alpaca.Alpaca()
     if alpaca.connect():
+        if 'reporting' in conf and 'discord' in conf['reporting'] and conf['reporting']['discord'].get('enabled'):
+            alpaca.discord_client = discord_client
         alpaca_strategy = strategy.load_strategy('alpacaStrategy')
         alpaca.check_trades(alpaca_strategy)
         alpaca.graph_test("AMD")
-        #historic_trades = alpaca.get_data(alpaca_strategy)
-        #print(historic_trades)
-        pass
-    sys.exit(1)
     # ALPACA TESTING END.
 
     current_strategy = sys.argv[1]
