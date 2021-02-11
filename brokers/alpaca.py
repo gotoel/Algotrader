@@ -32,10 +32,13 @@ class Alpaca(object):
         return False
 
     def check_trades(self, strategy):
+        self.report("------------------------------------------------------")
         self.report("[check_trades] Checking trades...")
         moving_averages = strategy['movingAverages']
 
         for symbol in strategy['symbols']:
+            self.report("[check_trades] Checking %s..." % symbol)
+
             asset = self.api.get_asset(symbol)
 
             barset_timeframe = "15Min"
@@ -53,20 +56,32 @@ class Alpaca(object):
             sma = barset_data['SMA'].values[-1]
             ema = barset_data['EMA'].values[-1]
 
+            try:
+                self.graph_test(symbol)
+            except:
+                pass
+
             # Check positions
             open_positions = self.get_positions(symbol)
 
             # Check if there are no open positions for this stock
             if open_positions is None:
+                self.report("[check_trades] No open positions, checking if one should be opened...")
                 # Entry strategy: Is last close price higher than EMA and lower than SMA
+                self.report("[check_trades] Checking entry strategy: EMA50(%s) < PRICE(%s) < SMA10(%s)" %
+                            (ema, last_trade.price, sma))
                 if ema < last_trade.price < sma:
                     lot_size = self.calc_position_size(symbol, strategy)
                     self.open_position(symbol, "BUY", lot_size, float(strategy['takeProfit']),
                                                                 float(strategy['stopLoss']))
             else:
+                self.report("[check_trades] Checking if entered positions should be exited...")
                 # Exit strategy: Is last close price lower than EMA and higher than SMA?
+                self.report("[check_trades] Checking exit strategy: EMA50(%s) > PRICE(%s) > SMA10(%s)" %
+                            (ema, last_trade.price, sma))
                 if ema > last_trade.price > sma:
                     self.close_position(symbol)
+        self.report("------------------------------------------------------")
 
     def close_position(self, symbol):
         self.report("[close_position]: Closing position on (%s)." % symbol)
@@ -180,8 +195,8 @@ class Alpaca(object):
         #fig.show()
         #fig.to_image()
 
-        sma20 = ta.sma(closeData, 20)
-        sma50 = ta.sma(closeData, 50)
+        sma20 = ta.sma(closeData, 10)
+        ema50 = ta.ema(closeData, 50)
 
         # Defines the plot for each trading symbol
         f, ax = plt.subplots()
@@ -190,24 +205,25 @@ class Alpaca(object):
         # Plots market data and indicators
         ax.plot(timeList, closeData,
                 label=symbol, color="black")
-        ax.plot(timeList, sma20, label="SMA20", color="green")
-        ax.plot(timeList, sma50, label="SMA50", color="red")
+        ax.plot(timeList, sma20, label="SMA10", color="green")
+        ax.plot(timeList, ema50, label="EMA50", color="red")
 
         # Fills the green region if SMA20 > SMA50 and red if SMA20 < SMA50
         ax.fill_between(timeList,
-                        sma50, sma20, where=sma20 >= sma50, facecolor='green', alpha=0.5, interpolate=True)
+                        ema50, sma20, where=sma20 >= ema50, facecolor='green', alpha=0.5, interpolate=True)
         ax.fill_between(timeList,
-                        sma50, sma20, where=sma20 <= sma50, facecolor='red', alpha=0.5, interpolate=True)
+                        ema50, sma20, where=sma20 <= ema50, facecolor='red', alpha=0.5, interpolate=True)
 
         # Adds the legend to the right of the chart
-        ax.legend(loc='best', bbox_to_anchor=(1.0, 0.5))
+        ax.legend(loc='best')
 
         #plot = plt.show()
-        plt.savefig('temp.png')
+        plt.savefig('graphs/%s.png' % symbol)
         if self.discord_client:
-            self.discord_client.msg_file('temp.png')
+            self.report_file('graphs/%s.png' % symbol)
         else:
-            plt.show()
+            #plt.show()
+            pass
 
     def report(self, msg):
         if self.discord_client:
@@ -216,5 +232,5 @@ class Alpaca(object):
 
     def report_file(self, filename):
         if self.discord_client:
-            self.discord_client.msg(filename)
+            self.discord_client.msg_file(filename)
 

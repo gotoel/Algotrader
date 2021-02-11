@@ -130,3 +130,6 @@ dmypy.json
 
 # bot's settings file
 settings.json
+
+# charts and graphs
+graphs/
