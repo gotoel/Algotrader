@@ -71,7 +71,7 @@ class Alpaca(object):
                 self.report("[check_trades] Checking entry strategy: EMA50(%s) < PRICE(%s) < SMA10(%s)" %
                             (ema, last_trade.price, sma))
                 if ema < last_trade.price < sma:
-                    lot_size = self.calc_position_size(symbol, strategy)
+                    lot_size = self.calc_position_size(symbol, last_trade.price, strategy)
                     self.open_position(symbol, "BUY", lot_size, float(strategy['takeProfit']),
                                                                 float(strategy['stopLoss']))
             else:
@@ -110,11 +110,12 @@ class Alpaca(object):
     def get_historic_trades(self):
         return self.api.polygon.historic_trades_v2()
 
-    def calc_position_size(self, symbol, strategy):
+    def calc_position_size(self, symbol, price, strategy):
         self.report("[calc_position_size]: Calculating position size for (%s)" % symbol)
         account = self.api.get_account()
+
         balance = account.cash
-        lot_size = float(balance) * float(strategy["risk"]/100) / strategy["stopLoss"]
+        lot_size = float(balance) * float(strategy["risk"]/100) / (price * strategy["stopLoss"])
         lot_size = math.floor(lot_size)  # Alpaca does not support fractional shares, round down to nearest integer.
         return lot_size
 

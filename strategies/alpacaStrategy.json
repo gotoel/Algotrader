@@ -4,7 +4,7 @@
     "alpaca"
   ],
   "symbols": [
-    "AMD", "FB", "NIO", "BB"
+    "AMD", "FB", "NIO", "BB", "FCEL", "CCL"
   ],
   "risk" : 2,
   "takeProfit": 3,
