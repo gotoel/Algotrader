@@ -35,7 +35,7 @@ def live_trading(strategy):
 
 def run_trader(strategy):
     if discord_client:
-        discord_client.msg("Running trader at", datetime.now())
+        discord_client.msg("Running trader at %s" % datetime.now())
     print("Running trader at", datetime.now())
 
     if 'brokers' not in strategy:
