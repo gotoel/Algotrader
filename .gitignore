@@ -133,3 +133,6 @@ settings.json
 
 # charts and graphs
 graphs/
+
+# PyCharm .idea folder
+.idea/
